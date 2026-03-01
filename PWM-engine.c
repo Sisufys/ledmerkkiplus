@@ -3,12 +3,7 @@
 #include <avr/io.h>
 #include <avr/pgmspace.h>
 
-void setLed(int index, int brightness);
-void roundaround(uint8_t n, uint8_t delay);
-void fadeall(uint8_t speed);
-void triangles(int n, int delay);
-void breathe(int n, int delay);
-int random();
+void setLed(int index, int brightness, uint8_t gammaCorrection);
 void setup();
 
 #define ROW_MASK  0b00001111   //PA0–PA3
@@ -21,18 +16,17 @@ void setup();
 
 //gamma correction table, enable in setLed() if wanted
 const uint8_t gamma64[] PROGMEM = {
-     0,  0,  0,  0,  0,  0,  0,  0,
-     0,  1,  1,  1,  1,  1,  2,  2,
-     2,  2,  3,  3,  3,  4,  4,  5,
-     5,  5,  6,  7,  7,  8,  8,  9,
-    10, 10, 11, 12, 13, 13, 14, 15,
-    16, 17, 18, 19, 20, 21, 22, 23,
-    25, 26, 27, 29, 30, 31, 33, 34,
-    36, 38, 39, 41, 43, 45, 47, 63
+     1,  1,  1,  2,  2,  3,  3,  4,  
+     5,  6,  7,  8,  9, 10, 11, 12,
+    13, 15, 17, 19, 21, 23, 25, 27,
+    29, 31, 33, 35, 37, 39, 41, 43,
+    45, 47, 49, 50, 51, 52, 53, 54,
+    55, 56, 57, 58, 59, 60, 61, 62,
+    62, 63, 63, 63, 63, 63, 63, 63,
+    63, 63, 63, 63, 63, 63, 63, 63
 };
 
 volatile uint8_t framebuffer[ROWS][COLS];
-
 uint8_t curRow = 0;
 volatile uint8_t frame_tick = 0;
 volatile uint8_t pwm_tick = 0;   // 0..63
@@ -50,7 +44,7 @@ void setup(){
 
     //set every brightness 0
     for(int i = 0; i < LEDCOUNT; i++){
-        setLed(i, 0);
+        setLed(i, 0, 0);
     }
 
     //Timer1 uses PLL clock, setup PLL
@@ -69,7 +63,7 @@ void setup(){
     sei(); // Enable global interrupts
 }
 
-void setLed(int index, int brightness){
+void setLed(int index, int brightness, uint8_t gammaCorrection){
     //smooth bounds alil
     if(index < 0) index += 32;
     if(index > 31) index -= 32;
@@ -77,9 +71,12 @@ void setLed(int index, int brightness){
     if(brightness > 63) brightness = 63;
 
     if(index >= 0 && index <= 31){
-        framebuffer[index / 8][index % 8] = brightness;
-        //gamma corrected, imo looks bad, uncomment to test
-        //leds[index / 8][index % 8] = pgm_read_byte(&gamma64[brightness]);
+        if(gammaCorrection){
+            framebuffer[index / 8][index % 8] = pgm_read_byte(&gamma64[brightness]);
+        }
+        else{
+            framebuffer[index / 8][index % 8] = brightness;
+        }
     }
 }
 

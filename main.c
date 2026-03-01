@@ -21,30 +21,34 @@ void main (void){
             fadeall(fadeSpeed[animation]);
             frame_tick = 0;
             //if(ticks % 100 == 0) setLed((random() >> 11), 63);
-            switch(animation){
-                case(0):
-                    updateSnowfall(8, 80);
-                    break;
-                case(1):
-                    updateBreathe(3, 2);
-                    break;
-                case(2):
-                    updateBars(1, 0);
-                    break;
-                case(3):
-                    updateBars(1, 1);
-                    break;
-            }
-            if(animation >= 4){
+
+            if(animation >= 5){
                 animation = 0;
             }
+                switch(animation){
+                    case(0):
+                        updateBreathe(5, 2);
+                        break;
+                    case(1):
+                        update1dWaves(4, 5, 1, 1);
+                        break;
+                    case(2):
+                        update2dWaves(8, 5, 1);//speed 8 prtty good
+                        break;
+                    case(3):
+                        updateBars(1, 0);
+                        break;
+                    case(4):
+                        updateSnowfall(8, 80);
+                        break;
+                }
         }
-        
+
 
         uint8_t buttonState = (PINB >> PB6) & 1; //state is 0 or 1, 0 being button pressed
         if(!buttonState && (ticks - lastButtonPress > 5)){ //if button is pulled low and the last button press is over 50 ms ago, debouncing
             lastButtonPress = ticks;
-            setLed((random() >> 11), 63);
+            setLed((random() >> 11), 63, 0);
 
         }
     }
