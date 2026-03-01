@@ -27,16 +27,16 @@ void main (void){
             }
                 switch(animation){
                     case(0):
-                        updateBreathe(5, 2);
+                        updateBreathe(10, 2);
                         break;
                     case(1):
-                        update1dWaves(4, 5, 1, 1);
+                        update1dWaves(4, 10, 1, 1);
                         break;
                     case(2):
-                        update2dWaves(8, 5, 1);//speed 8 prtty good
+                        update2dWaves(8, 10, 1);//speed 8 prtty good
                         break;
                     case(3):
-                        updateBars(1, 0);
+                        updateBars(1, 10, 0);
                         break;
                     case(4):
                         updateSnowfall(8, 80);

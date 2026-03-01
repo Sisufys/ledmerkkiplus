@@ -4,7 +4,7 @@ void delayFade(int n, int speed);
 void fadeall(uint8_t speed);
 void updateSnowfall(int delay, int lenghtTicks);
 void updateBreathe(int cycles, int delay);
-void updateBars(int delay, uint8_t rand);
+void updateBars(int delay, int n, uint8_t rand);
 void update2dWaves(int speed, int n, uint8_t gammaCorrection);
 void update1dWaves(int speed, int n, int freq, uint8_t gammaCorrection);
 
@@ -176,7 +176,7 @@ void update2dWaves(int speed, int n, uint8_t gammaCorrection){
     }
 }
 
-void updateBars(int delay, uint8_t rand){
+void updateBars(int delay, int n, uint8_t rand){
     for(int i = 0; i < 5; i++){
         if(!rand && ((b - (38 * i)) % 200 == 0)){
             barBrg[i][1] = 1;
@@ -216,7 +216,7 @@ void updateBars(int delay, uint8_t rand){
         barBrg[i][0] = 1;
     }
     b++;
-    if(b >= 1000){
+    if(b >= n * 200){
         for(int i = 0; i < 5; i++){
             barBrg[i][0] = 0;
             barBrg[i][1] = 0;
@@ -240,7 +240,7 @@ void updateSnowfall(int delay, int lenghtTicks){
         lastTicks = ticks;
         setLed((random() >> 11), 63, 0);
         n++;
-        if(n >= 3*lenghtTicks/4){
+        if(n >= 9*lenghtTicks/10){
             b += 2;
         }
     }
@@ -253,7 +253,6 @@ void updateSnowfall(int delay, int lenghtTicks){
 }
 
 void updateBreathe(int cycles, int delay){
-
     if(ticks - lastTicks > delay){
         lastTicks = ticks;
         for(int led = 0; led < 32; led++){ //set all leds to b brightness
