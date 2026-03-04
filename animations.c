@@ -325,13 +325,15 @@ void delayFade(int n, int speed){ //fade for n * 4 ms ,,,todo non blocking solut
 }
 
 void fadeall(uint8_t n){
-    count++;
-    if(count >= n){
-        count = 0;
-        for(int x = 0; x < ROWS; x++) {
-            for(int y = 0; y < COLS; y++) {
-                if(framebuffer[x][y] > 1) {
-                    framebuffer[x][y] -= 1;
+    if(n){
+        count++;
+        if(count >= n){
+            count = 0;
+            for(int x = 0; x < ROWS; x++) {
+                for(int y = 0; y < COLS; y++) {
+                    if(framebuffer[x][y] > 1) {
+                        framebuffer[x][y] -= 1;
+                    }
                 }
             }
         }
