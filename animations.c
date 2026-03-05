@@ -1,17 +1,8 @@
-#include "PWM-engine.c"
-
-int random();
-void delayFade(int n, int speed);
-void fadeall(uint8_t speed);
-void updateSnowfall(int delay, int lenghtTicks);
-void updateBreathe(int cycles, int delay);
-void updateBars(int delay, int n, uint8_t rand);
-void update2dWaves(int speed, int n, uint8_t gammaCorrection);
-void update1dWaves(int speed, int n, int freq, uint8_t gammaCorrection);
-void ripple(int speed, int n, int freq, uint8_t gammaCorrection);
+#include "driver.h"
+#include "animations.h"
 
 //all leds mapped into a 2d grid
-const uint8_t coords[LEDCOUNT][2] = { //led, (x, y) grid is size (120, 200)
+static const uint8_t coords[LEDCOUNT][2] = { //led, (x, y) grid is size (120, 200)
     {60, 200},
     {60, 186},
     {60, 170},
@@ -47,7 +38,7 @@ const uint8_t coords[LEDCOUNT][2] = { //led, (x, y) grid is size (120, 200)
 };
 
 //lookup table for 32 * 32sin(512/2pi *x)
-const uint8_t sineLut[512] PROGMEM = {
+static const uint8_t sineLut[512] PROGMEM = {
     32, 32, 33, 33, 34, 34, 34, 35, 35, 35, 36, 36, 37, 37, 37, 38, 38, 38, 39, 39, 40, 40, 40, 41,
     41, 41, 42, 42, 42, 43, 43, 44, 44, 44, 45, 45, 45, 46, 46, 46, 47, 47, 47, 48, 48, 48, 49, 49,
     49, 50, 50, 50, 50, 51, 51, 51, 52, 52, 52, 53, 53, 53, 53, 54, 54, 54, 54, 55, 55, 55, 55, 56,
@@ -71,7 +62,7 @@ const uint8_t sineLut[512] PROGMEM = {
     29, 29, 30, 30, 30, 31, 31, 32};
 
 //lookup table for the distance of led on index i from the point (60,100): sqrt((x-60)²+(y-100)²)
-const uint8_t dists[32] PROGMEM = {
+static const uint8_t dists[32] PROGMEM = {
     100,
     86,
     70,
@@ -107,7 +98,7 @@ const uint8_t dists[32] PROGMEM = {
 };
 
 //upper and lower triangle animations
-const uint8_t tri1[16] = {
+static const uint8_t tri1[16] = {
     1,
     2,
     3,
@@ -125,7 +116,7 @@ const uint8_t tri1[16] = {
     31,
     32};
 
-const uint8_t tri2[16] = {
+static const uint8_t tri2[16] = {
     14,
     13,
     12,
@@ -143,22 +134,27 @@ const uint8_t tri2[16] = {
     16,
     15};
 
-const uint8_t bars[5][8]={  {-1,26,27,28,29,30,31,0},   //upper hypotenuse
+static const uint8_t bars[5][8]={  {-1,26,27,28,29,30,31,0},   //upper hypotenuse
                             {-1,1,2,3,4,5,6,-1},        //upper leg
                             {20,21,22,23,24,25,-1,-1},  //middle line
                             {7,8,9,10,11,12,-1,-1},     //lower leg
                             {13,14,15,16,17,18,19,-1}}; //lower hypotenuse
 
 uint8_t barBrg[5][2]; //0 = brightness, 1 = direction
-
+uint8_t dir = 1;
 uint16_t randomval;
 int count = 0;
-uint32_t lastTicks = 0;
+int fadecount = 0;
 int n = 0;
-int animation = 0;
-uint8_t dir = 1;
+int animation = 0; //accessed in main.c, declared in animations.h
 int b = 0;
-int dim = 0;
+
+void resetVars(){ 
+    b = 0;
+    n = 0;
+    count = 0;
+    dir = 1;
+}
 
 void ripple(int speed, int n, int freq, uint8_t gammaCorrection){
     for(int i = 0; i < LEDCOUNT; i++){
@@ -280,38 +276,47 @@ void updateBars(int delay, int n, uint8_t rand){ //TODO delay
         }
         animation++;
         b = 0;
+        n = 0;
         delayFade(100, 1);
     }
 }
+
 int random(){
-    randomval = randomval*2053u + 13849u; //uint16 for wraparound
+    randomval = randomval*2053u + 13849u; //randomval is uint16 for wraparound
     return randomval;
 }
 
-void updateSnowfall(int delay, int lenghtTicks){
-    if(frame_tick){
-        fadeall(1);
-        frame_tick = 0;
-    }
-    if(ticks - lastTicks > delay + b){
-        lastTicks = ticks;
+void initRandom(){
+    //setup random value for the linear congruential generator (random number)
+    uint8_t l = TCNT0L;
+    uint8_t h = TCNT0H;
+    randomval = (((uint16_t)h << 8) | l);
+    randomval ^= TCNT1;
+    if(!randomval) randomval = 1;
+
+}
+void updateSnowfall(int delay, int lenghtTicks){ 
+    count++;
+    if(count >= delay + b){
         setLed((random() >> 11), 63, 0);
         n++;
-        if(n >= 9*lenghtTicks/10){
-            b += 2;
+        if(10*n >= 9*lenghtTicks){ //n >= 9*lenghtTicks/10 without slow ah division
+            b += 2; //when the last 10% of ticks, every tick add 12 ms of delay
         }
+        count = 0;
     }
     if(n >= lenghtTicks){
         animation++;
         n = 0;
         b = 0;
-        delayFade(60, 1);
+        count = 0;
+        delayFade(100, 1);
     }
 }
 
-void updateBreathe(int cycles, int delay){
-    if(ticks - lastTicks > delay){
-        lastTicks = ticks;
+void updateBreathe(int cycles, int delay){ //todo no usage of ticks
+    count++;
+    if(count >= delay){
         for(int led = 0; led < 32; led++){ //set all leds to b brightness
             setLed(led, b, 0);
         }
@@ -325,6 +330,7 @@ void updateBreathe(int cycles, int delay){
             dir = 1;
             n++; //cycle completed
         }
+        count = 0;
     }
     if(n >= cycles){
         animation++;;
@@ -333,12 +339,11 @@ void updateBreathe(int cycles, int delay){
     }
 }
 
-void delayFade(int n, int speed){ //fade for n * 4 ms ,,,todo non blocking solution to fading between animations
+void delayFade(int n, int speed){ //fade for n * 6 ms ,,,todo non blocking solution to fading between animations
     int i = 0;
     while(i < n){
-        if(frame_tick){
+        if(getFrametick()){
             fadeall(speed);
-            frame_tick = 0;
             i++;
         }
     }
@@ -346,9 +351,9 @@ void delayFade(int n, int speed){ //fade for n * 4 ms ,,,todo non blocking solut
 
 void fadeall(uint8_t n){
     if(n){
-        count++;
-        if(count >= n){
-            count = 0;
+        fadecount++;
+        if(fadecount >= n){
+            fadecount = 0;
             for(int x = 0; x < ROWS; x++) {
                 for(int y = 0; y < COLS; y++) {
                     if(framebuffer[x][y] > 1) {
