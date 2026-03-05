@@ -72,7 +72,7 @@ void setLed(int index, int brightness, uint8_t gammaCorrection){//gammaCorrectio
     //smooth bounds alil, bad practice
     if(index < 0) index += 32;
     if(index > 31) index -= 32;
-    if(index < 0 || index > 32) index = 1; //if still greater or smaller than bounds, set to one to indicate errors
+
     if(brightness < 0) brightness = 0;
     if(brightness > 63) brightness = 63;
 

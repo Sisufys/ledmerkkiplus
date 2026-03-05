@@ -134,11 +134,12 @@ static const uint8_t tri2[16] = {
     16,
     15};
 
-static const uint8_t bars[5][8]={  {-1,26,27,28,29,30,31,0},   //upper hypotenuse
-                            {-1,1,2,3,4,5,6,-1},        //upper leg
-                            {20,21,22,23,24,25,-1,-1},  //middle line
-                            {7,8,9,10,11,12,-1,-1},     //lower leg
-                            {13,14,15,16,17,18,19,-1}}; //lower hypotenuse
+static const uint8_t bars[5][8] = {
+    {-1,26,27,28,29,30,31,0},   //upper hypotenuse
+    {-1,1,2,3,4,5,6,-1},        //upper leg
+    {20,21,22,23,24,25,-1,-1},  //middle line
+    {7,8,9,10,11,12,-1,-1},     //lower leg
+    {13,14,15,16,17,18,19,-1}}; //lower hypotenuse
 
 uint8_t barBrg[5][2]; //0 = brightness, 1 = direction
 uint8_t dir = 1;
@@ -246,12 +247,14 @@ void updateBars(int delay, int n, uint8_t rand){ //TODO delay
         if(barBrg[i][0] <= 1){
             barBrg[i][1] = 0;
         }
+
         for(int c = 0; c < 8; c++){
             if(bars[i][c] >= 0){
                 setLed(bars[i][c], barBrg[i][0], 0);
             }
         }
     }
+    
     if(rand && (b % 48 == 0)){ //if random flag is set
         int tries = 0;
         int passed = 0;
@@ -295,6 +298,7 @@ void initRandom(){
     if(!randomval) randomval = 1;
 
 }
+
 void updateSnowfall(int delay, int lenghtTicks){ 
     count++;
     if(count >= delay + b){
