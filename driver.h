@@ -13,11 +13,19 @@
 #define COLS 8
 #define LEDCOUNT 32
 
+//frame buffer used to store the current brightness values of every led
 extern volatile uint8_t framebuffer[ROWS][COLS];
 
+//returns current ticks passed since isr routine started started
 uint32_t getTicks();
+
+//returns true once every time a cycle is completed
 uint8_t getFrametick();
+
+//sets the led at index to brightness, with or without gamma correction
 void setLed(int index, int brightness, uint8_t gammaCorrection);
+
+//sets up the ISR, ports, framebuffer and enables global interrupts, needs to be called once before actual animations
 void setupDriver();
 
 #endif

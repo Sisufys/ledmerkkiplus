@@ -154,8 +154,9 @@ uint16_t b = 0;
 
 void blinkSync(int n){
     for(int i = 0; i < LEDCOUNT; i++){ //go through all the leds
-        accms[i] += 130 - i;
-        if(!blinkState[i][1]){
+        accms[i] += 130 - i;    //increment the corresponding accumulator different value per led, 
+        if(!blinkState[i][1]){  //makes the blinking frequency different for every led
+            //if the accumulator slot is over the full cycle limit, start the corresponding led blink
             if(accms[i] >= 16384){
                 accms[i] -= 16384;
                 blinkState[i][1] = 1;
@@ -175,10 +176,10 @@ void blinkSync(int n){
     }
 
     b++;//ticks since from start of animation
-    if(b >= (n * 16384) + 126){
+    if(b >= (n * 16384) + 50){ //timing will probably not work with other values than n=1...
         animation++;
-        b = 0;
-        //delayFade(100, 1); no need to fade because animation ends synced with all off
+        resetVars();
+        delayFade(100, 1);
     }
 }
 
@@ -187,6 +188,15 @@ void resetVars(){
     n = 0;
     count = 0;
     dir = 1;
+    for(int i = 0; i < LEDCOUNT; i++){
+        blinkState[i][0] = 0;
+        blinkState[i][1] = 0;
+        accms[i] = 0;
+    }
+    for(int i = 0; i < 5; i++){
+        barBrg[i][0] = 0;
+        barBrg[i][1] = 0;
+    }
 }
 
 void ripple(int speed, int n, int freq, uint8_t gammaCorrection){
@@ -201,7 +211,7 @@ void ripple(int speed, int n, int freq, uint8_t gammaCorrection){
     b++;
 
     if(b >= n * 512 / speed){
-        b = 0;
+        resetVars();
         animation++;
         delayFade(100, 1);
     }
@@ -216,8 +226,7 @@ void updateSineBreathe(int speed, int n, int freq, int gammaCorrection){
     }
     b++;
     if(b >= n * 512 / speed){
-        dir = 1;
-        b = 0;
+        resetVars();
         animation++;
         delayFade(100, 1);
     }
@@ -233,8 +242,7 @@ void update1dWaves(int speed, int n, int freq, uint8_t gammaCorrection){
     }
     b++;
     if(b >= n * 512 / speed){
-        dir = 1;
-        b = 0;
+        resetVars();
         animation++;
         delayFade(128, 2);
     }
@@ -254,8 +262,7 @@ void update2dWaves(int speed, int n, uint8_t gammaCorrection){
     b++;
 
     if(b >= n * 512 / speed){
-        dir = 1;
-        b = 0;
+        resetVars();
         animation++;
         delayFade(100, 1);
     }
@@ -310,8 +317,7 @@ void updateBars(int delay, int n, uint8_t rand){ //TODO delay
             barBrg[i][1] = 0;
         }
         animation++;
-        b = 0;
-        n = 0;
+        resetVars();
         delayFade(100, 1);
     }
 }
@@ -328,9 +334,7 @@ void updateSnowfall(int delay, int lenghtTicks){
     }
     if(n >= lenghtTicks){
         animation++;
-        n = 0;
-        b = 0;
-        count = 0;
+        resetVars();
         delayFade(100, 1);
     }
 }
@@ -355,8 +359,7 @@ void updateBreathe(int cycles, int delay){ //todo no usage of ticks
     }
     if(n >= cycles){
         animation++;;
-        n = 0;
-        b = 0;
+        resetVars();
     }
 }
 

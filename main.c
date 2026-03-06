@@ -1,15 +1,16 @@
 #include "animations.h"
 #include "driver.h"
 
-uint8_t fadeSpeed[5] = {1,0,0,1,1};
+uint8_t fadeSpeed[5] = {0,0,0,0,0}; //set 1 for animations that need constant fading
+uint8_t debounceTicks = 10;
 
 void main (void){
-    //set the matrix driver
+    //setup the matrix driver
     setupDriver();
     //initialize pseudorandom number generator
     initRandom();
 
-    int lastButtonPress = 0;
+    uint32_t lastButtonPress = 0; //uint32_t to not overflow, uint16_t overflows in about 6.5 minutes, 32 bit overflows in 298 days
     while(1){
         if(getFrametick()){ //fade leds if any on while keeping ye button responsive
             fadeall(fadeSpeed[animation]);
@@ -38,8 +39,8 @@ void main (void){
             }
         }
 
-        uint8_t buttonState = (PINB >> PB6) & 1; //state is 0 or 1, 0 being button pressed
-        if(!buttonState && (getTicks() - lastButtonPress > 10)){ //if button is pressed and the last button press is over n * 6 ms ago, debouncing
+        uint8_t buttonState = (PINB >> PB6) & 1; //read PB6 for button presses, 0 being pressed and 1 not pressed
+        if(!buttonState && (getTicks() - lastButtonPress > debounceTicks)){ //if the last button press is over n * 6 ms ago, debouncing
             lastButtonPress = getTicks();
             animation++;
             resetVars();
