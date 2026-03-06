@@ -19,20 +19,21 @@ void main (void){
             }
             switch(animation){
                 case(0):
-                    ripple(3, 10, 4, 0);
+                    ripple(3, 20, 4, 0);
                     //updateBreathe(10, 2);
                     break;
                 case(1):
-                    update1dWaves(2, 10, 1, 1);
+                    update1dWaves(2, 20, 1, 1);
                     break;
                 case(2):
-                    update2dWaves(2, 10, 1);
+                    update2dWaves(2, 20, 1);
                     break;
                 case(3):
-                    updateBars(2, 10, 0);
+                    updateBars(2, 20, 0);
                     break;
                 case(4):
-                    updateSnowfall(8, 160);
+                    blinkSync(1);
+                    //updateSnowfall(8, 160);
                     break;
             }
         }

@@ -17,5 +17,6 @@ void updateBars(int delay, int n, uint8_t rand);
 void update2dWaves(int speed, int n, uint8_t gammaCorrection);
 void update1dWaves(int speed, int n, int freq, uint8_t gammaCorrection);
 void ripple(int speed, int n, int freq, uint8_t gammaCorrection);
+void blinkSync(int n);
 
 #endif

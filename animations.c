@@ -141,14 +141,46 @@ static const uint8_t bars[5][8] = {
     {7,8,9,10,11,12,-1,-1},     //lower leg
     {13,14,15,16,17,18,19,-1}}; //lower hypotenuse
 
-uint8_t barBrg[5][2]; //0 = brightness, 1 = direction
+uint16_t accms[32];
+uint8_t blinkState[32][2]; //0: brightness, 1: direction
+uint8_t barBrg[5][2]; //0: brightness, 1: direction
 uint8_t dir = 1;
 uint16_t randomval;
 int count = 0;
 int fadecount = 0;
 int n = 0;
 int animation = 0; //accessed in main.c, declared in animations.h
-int b = 0;
+uint16_t b = 0;
+
+void blinkSync(int n){
+    for(int i = 0; i < LEDCOUNT; i++){ //go through all the leds
+        accms[i] += 130 - i;
+        if(!blinkState[i][1]){
+            if(accms[i] >= 16384){
+                accms[i] -= 16384;
+                blinkState[i][1] = 1;
+                blinkState[i][0] = 1;
+            }
+            continue;
+        }
+        //if direction was nonzero, continue the current blink cycle
+        setLed(i, blinkState[i][0] += blinkState[i][1], 0);
+
+        if(blinkState[i][0] >= 60){//if brightness is 63 or over, reverse direction
+            blinkState[i][1] = -1;
+        }
+        if(blinkState[i][0] <= 1){//if brightness is 1, stop changing brightness
+            blinkState[i][1] = 0;
+        }
+    }
+
+    b++;//ticks since from start of animation
+    if(b >= (n * 16384) + 126){
+        animation++;
+        b = 0;
+        //delayFade(100, 1); no need to fade because animation ends synced with all off
+    }
+}
 
 void resetVars(){ 
     b = 0;
@@ -284,21 +316,6 @@ void updateBars(int delay, int n, uint8_t rand){ //TODO delay
     }
 }
 
-int random(){
-    randomval = randomval*2053u + 13849u; //randomval is uint16 for wraparound
-    return randomval;
-}
-
-void initRandom(){
-    //setup random value for the linear congruential generator (random number)
-    uint8_t l = TCNT0L;
-    uint8_t h = TCNT0H;
-    randomval = (((uint16_t)h << 8) | l);
-    randomval ^= TCNT1;
-    if(!randomval) randomval = 1;
-
-}
-
 void updateSnowfall(int delay, int lenghtTicks){ 
     count++;
     if(count >= delay + b){
@@ -367,4 +384,19 @@ void fadeall(uint8_t n){
             }
         }
     }
+}
+
+int random(){
+    randomval = randomval*2053u + 13849u; //randomval is uint16 for wraparound
+    return randomval;
+}
+
+void initRandom(){
+    //setup random value for the linear congruential generator (random number)
+    uint8_t l = TCNT0L;
+    uint8_t h = TCNT0H;
+    randomval = (((uint16_t)h << 8) | l);
+    randomval ^= TCNT1;
+    if(!randomval) randomval = 1;
+
 }
